@@ -8,30 +8,30 @@ import sys
 
 
 class Path:
-    path: str = None
-    pathlist: list = None
-    isarray: bool = None
-    isarraypath: bool = None
-    multiplevalues: bool = None
-    existing: int = None
+    path = None
+    pathlist = None
+    isarray = None
+    isarraypath = None
+    multiplevalues = None
+    existing = None
 
-    def __init__(self, path: str, pathlist: list, isarraypath: bool = None, existing: int = 1):
+    def __init__(self, path, pathlist, isarraypath=None, existing=1):
         self.path = path
         self.pathlist = pathlist
         self.isarraypath = isarraypath
         self.existing = existing
 
-    def is_array(self) -> bool:
+    def is_array(self):
         if self.isarray is None:
             return False
         return self.isarray
 
-    def is_arraypath(self) -> bool:
+    def is_arraypath(self):
         if self.isarraypath is None:
             return False
         return self.isarraypath
 
-    def has_multiple_values(self) -> bool:
+    def has_multiple_values(self):
         if self.multiplevalues is None:
             return False
         return self.multiplevalues
