@@ -143,11 +143,12 @@ def csv_print(fieldstructurestatistics):
 def run():
     parser = argparse.ArgumentParser(prog='ldjstructurestats',
                                      description='Returns a structure statistics from given line-delimited JSON records. Eats line-delimited JSON records from stdin. Puts structure statistics calculated from the given line-delimited JSON records as pure CSV to stdout.',
+                                     epilog='example: ldjstructurestats < [INPUT LINE-DELIMITED JSON RECORDS] > [PATH TO THE OUTPUT CSV FILE]',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     args = parser.parse_args()
 
-    if args.help:
+    if hasattr(args, 'help') and args.help:
         parser.print_usage(sys.stderr)
         exit(-1)
 
