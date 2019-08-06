@@ -106,7 +106,7 @@ def update_travers_map_w_dict(existingpathmap, additionalpathmap):
 
 
 def traverse(jsonnode, seedpathlist, key, fromarray):
-    pathmap = {}
+    pathmap = collections.OrderedDict()
     currentpathlist = seedpathlist.copy()
     fieldtuple = (str(key), str(type(jsonnode)))
     currentpathlist.append(fieldtuple)
@@ -160,7 +160,8 @@ def run():
         for path, pathobject in traverseresult.items():
             simple_path = generate_simple_path(pathobject.pathlist)
             if simple_path not in resultmap:
-                pathmap = {path: pathobject}
+                pathmap = collections.OrderedDict()
+                pathmap[path] = pathobject
                 resultmap[simple_path] = pathmap
             else:
                 resultpathobjects = resultmap[simple_path]
