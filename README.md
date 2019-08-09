@@ -14,7 +14,7 @@ It puts structure statistics calculated from the given line-delimited JSON recor
 ldjstructurestats
 
 optional arguments:
-  -h, --help                           show this help message and exit```
+  -h, --help                           show this help message and exit
 ```
 
 * example:
