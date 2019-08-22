@@ -13,13 +13,13 @@ class Path:
     isarray = None
     isarraypath = None
     multiplevalues = None
-    existing = None
+    pathoccurrence = None
 
-    def __init__(self, path, pathlist, isarraypath=None, existing=1):
+    def __init__(self, path, pathlist, isarraypath=None, pathoccurrence=1):
         self.path = path
         self.pathlist = pathlist
         self.isarraypath = isarraypath
-        self.existing = existing
+        self.pathoccurrence = pathoccurrence
 
     def is_array(self):
         if self.isarray is None:
@@ -37,27 +37,51 @@ class Path:
         return self.multiplevalues
 
 
+class ResultPath:
+    pathmap = None
+    existing = None
+    multiple_path_occurences_by_record = None
+
+    def __init__(self, pathmap, existing=1):
+        self.pathmap = pathmap
+        self.existing = existing
+
+    def has_multiple_path_occurences_by_record(self):
+        return self.multiple_path_occurences_by_record
+
+
 TWO_POINTS_PATH_PREFIX = ".."
 TAB_PREFIX = "    "
 ROOT_KEY = "."
 ARRAY_VALUE = "ARRAY_VALUE_PLACEHOLDER"
+JSON_OBJECT_TYPE = "<class 'dict'>"
+JSON_ARRAY_TYPE = "<class 'list'>"
+NO_OBJECT_TYPE = "<class 'NoneType'>"
+BOOLEAN_TYPE = "<class 'bool'>"
+DECIMAL_TYPE = "<class 'float'>"
+STRING_TYPE = "<class 'str'>"
+INTEGER_TYPE = "<class 'int'>"
 JSON_TYPE_SWITCHER = {
-    "<class 'dict'>": "{}",
-    "<class 'list'>": "[]",
-    "<class 'int'>": "(Integer)",
-    "<class 'str'>": "(String)",
-    "<class 'float'>": "(Decimal)",
-    "<class 'bool'>": "(Boolean)",
-    "<class 'NoneType'>": "(no object type)"
+    JSON_OBJECT_TYPE: "{}",
+    JSON_ARRAY_TYPE: "[]",
+    INTEGER_TYPE: "(Integer)",
+    STRING_TYPE: "(String)",
+    DECIMAL_TYPE: "(Decimal)",
+    BOOLEAN_TYPE: "(Boolean)",
+    NO_OBJECT_TYPE: "(no object type)"
 }
 PATH_NUMBER = 'path_number'
 FIELD_PATH = 'field_path'
+MULTIPLEPATHS = 'multiple_paths'
 MUTLIPLEVALUES = 'multiple_values'
-EXISTING = 'existing'
+PATH_EXISTING = 'path_existing'
+PATH_OCCURRENCE = 'path_occurrence'
 HEADER = [PATH_NUMBER,
           FIELD_PATH,
+          MULTIPLEPATHS,
           MUTLIPLEVALUES,
-          EXISTING]
+          PATH_EXISTING,
+          PATH_OCCURRENCE]
 
 
 def generate_simple_path(fieldtuplelist):
@@ -92,7 +116,7 @@ def update_traverse_map(pathmap, pathlist, fromarray):
             pathobject = Path(path, pathlist)
         pathmap[path] = pathobject
     else:
-        pathmap[path].existing += 1
+        pathmap[path].pathoccurrence += 1
     return pathmap
 
 
@@ -101,7 +125,7 @@ def update_travers_map_w_dict(existingpathmap, additionalpathmap):
         if path not in existingpathmap:
             existingpathmap[path] = pathlist
         else:
-            existingpathmap[path].existing += 1
+            existingpathmap[path].pathoccurrence += 1
     return existingpathmap
 
 
@@ -157,38 +181,55 @@ def run():
         jsonline = json.loads(line)
         seed = []
         traverseresult = traverse(jsonline, seed, ROOT_KEY, False)
+        recordpathlist = []
         for path, pathobject in traverseresult.items():
             simple_path = generate_simple_path(pathobject.pathlist)
+            recordpathadded = False
+            if not pathobject.is_arraypath() and simple_path not in recordpathlist:
+                recordpathlist.append(simple_path)
+                recordpathadded = True
+
             if simple_path not in resultmap:
                 pathmap = collections.OrderedDict()
                 pathmap[path] = pathobject
-                resultmap[simple_path] = pathmap
+                resultmap[simple_path] = ResultPath(pathmap)
             else:
-                resultpathobjects = resultmap[simple_path]
+                resultpath = resultmap[simple_path]
+                if recordpathadded:
+                    # count path existence by record
+                    resultpath.existing += 1
+                resultpathobjects = resultpath.pathmap
                 if path not in resultpathobjects:
                     resultpathobjects[path] = pathobject
                 else:
                     resultpathobject = resultpathobjects[path]
-                    resultpathobject.existing += pathobject.existing
+                    resultpathobject.pathoccurrence += pathobject.pathoccurrence
                     if pathobject.multiplevalues is True:
                         resultpathobject.multiplevalues = True
                     resultpathobjects[path] = resultpathobject
+                resultmap[simple_path] = resultpath
 
     # sort paths via OrderedDict
     orderedresultmap = collections.OrderedDict(sorted(resultmap.items()))
 
     fieldstructurestatistics = []
     path_number = 0
-    for simplepath, pathobjects in orderedresultmap.items():
-        overallexisting = 0
+    for simplepath, resultpath in orderedresultmap.items():
+        overallpathoccurrence = 0
         path_number += 1
+        pathobjects = resultpath.pathmap
         for path, pathobject in pathobjects.items():
             if not pathobject.is_arraypath():
-                overallexisting += pathobject.existing
+                overallpathoccurrence += pathobject.pathoccurrence
+        multiplepaths = None
+        if resultpath.existing < overallpathoccurrence:
+            multiplepaths = True
         simplefieldstructurestatistic = {PATH_NUMBER: path_number,
                                          FIELD_PATH: simplepath,
+                                         MULTIPLEPATHS: multiplepaths,
                                          MUTLIPLEVALUES: None,
-                                         EXISTING: overallexisting}
+                                         PATH_EXISTING: resultpath.existing,
+                                         PATH_OCCURRENCE: overallpathoccurrence}
         fieldstructurestatistics.append(simplefieldstructurestatistic)
         for path, pathobject in pathobjects.items():
             hasmultiplevalues = None
@@ -200,8 +241,10 @@ def run():
             path_perfix_tab = "%s↳ " % path_prefix
             fieldstructurestatistic = {PATH_NUMBER: None,
                                        FIELD_PATH: path_perfix_tab + pathobject.path,
+                                       MULTIPLEPATHS: None,
                                        MUTLIPLEVALUES: hasmultiplevalues,
-                                       EXISTING: pathobject.existing}
+                                       PATH_EXISTING: None,
+                                       PATH_OCCURRENCE: pathobject.pathoccurrence}
             fieldstructurestatistics.append(fieldstructurestatistic)
 
     csv_print(fieldstructurestatistics)
