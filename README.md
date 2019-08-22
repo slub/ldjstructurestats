@@ -57,6 +57,7 @@ sudo -H pip3 install --upgrade [ABSOLUTE PATH TO YOUR LOCAL GIT REPOSITORY OF LD
 #### multiple_paths
 * indicates whether a simple field path occurs multiple times in a record or not (**only** at simple field paths)
    * `True` = this simple field path occurs multiple times in at least one record of the input record set
+   * this value is simply determined by a comparison of **path_existing** and **path_occurrence**, if **path_occurrence** is larger than **path_existing**, then there must be at least on record that contains this simple field path multiple times
 
 #### multiple_values
 
@@ -70,6 +71,8 @@ sudo -H pip3 install --upgrade [ABSOLUTE PATH TO YOUR LOCAL GIT REPOSITORY OF LD
 #### path_occurrence
 
 * the occurrence count of the simple field path or its structure variant in the line-delimited JSON records
+
+note: if **multiple_paths** is `True` (at the simple field path) and/or **multiple_values** is `True` (at a related structure variant field path that ends with a *JSON array*), then it's an indicator that a mapping from such a field path could produces multiple values in the output
 
 ### Structure Field Path Notation
 
