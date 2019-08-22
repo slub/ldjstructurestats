@@ -54,16 +54,22 @@ sudo -H pip3 install --upgrade [ABSOLUTE PATH TO YOUR LOCAL GIT REPOSITORY OF LD
 * rows below structure variants/mutations that end with a *JSON array*, contain the structure variant field paths incl. the object types that can occur in this *JSON array*
   * indent = 2 tabs + '↳' at the beginning of the field path
 
+#### multiple_paths
+* indicates whether a simple field path occurs multiple times in a record or not (**only** at simple field paths)
+   * `True` = this simple field path occurs multiple times in at least one record of the input record set
+
 #### multiple_values
 
 * **only** if, the field path (i.e. structure variant field path) ends with a *JSON array*, this column is either filled with `True` or `False`
    * `True` = this field path has *JSON arrays* with multiple values
    * `False` = this field path only has *JSON arrays* that do not contain multiple values, i.e., they are single-valued
 
-#### existing
+#### path_existing
+* the number of records where this (simple) field path exists, i.e., records where this (simple) field path occurs at least once
 
-* the existing count of the simple field path or its structure variant in the line-delimited JSON records
-* note: for leaf field paths this existing count is usually equal to its occurence count 
+#### path_occurrence
+
+* the occurrence count of the simple field path or its structure variant in the line-delimited JSON records
 
 ### Structure Field Path Notation
 
